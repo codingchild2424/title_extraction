@@ -1,0 +1,4 @@
+datasets/
+src/checkpoints/
+src/model_records/
+**/__pycache__/
