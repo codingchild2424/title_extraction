@@ -1,0 +1,1 @@
+{"special_tokens_map_file": "/root/.cache/huggingface/transformers/3e6abf40f4fadbea9e7b539c182868d979838d8f7e6cdcdf2ed52ddcf01420c0.15447ae63ad4a2eba8bc7a5146360711dc32b315b4f1488b4806debf35315e9a", "name_or_path": "gogamza/kobart-base-v1", "tokenizer_class": "PreTrainedTokenizerFast"}
