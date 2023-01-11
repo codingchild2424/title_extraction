@@ -22,17 +22,16 @@ def main(config):
     device = torch.device('cpu') if config.gpu_id < 0 else torch.device('cuda:%d' % config.gpu_id)
 
     # 모델 경로
-    model_path = './model_records/' + config.model_fn
-    tokenizer_path = './tokenizer_records/' + config.model_fn + "_tokenizer.pth"
+    model_path = './model_records/'
+    tokenizer_path = './tokenizer_records/'
 
     # model
     model = BartForConditionalGeneration.from_pretrained(
-        './model_records/'#,
-        #local_file_only=True
+        model_path
     ).to(device)
 
     tokenizer = PreTrainedTokenizerFast.from_pretrained(
-        './tokenizer_records/'
+        tokenizer_path
     )
     
     # Inference
