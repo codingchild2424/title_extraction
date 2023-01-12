@@ -23,27 +23,47 @@ def createFolder(directory):
 
 createFolder(save_folder_path)
 
+# http://www.kidkangwon.co.kr/bbs/list.html?page=2&total=200473&table=bbs_1&sc_area=&sc_word=&category=
+
 # URL
 GANGWON_URL_LIST = [
     'http://www.kidkangwon.co.kr/bbs/list.html?page=' + \
     str(i + 1)  + \
-    '&total=3630&table=bbs_1&sc_area=&sc_word=&category=' \
-    for i in range(182)
+    '&total=200473&table=bbs_1&sc_area=&sc_word=&category=' \
+    for i in range(10024)
 ]
 
-TEST_URL = GANGWON_URL_LIST[0]
+'''
+모든 장르가 섞여있음
+각 작품별 url 가져올때, 각 작품이 [수필]인지 확인해서 데이터 수집하기
+'''
 
-req = Request(TEST_URL, headers={'User-Agent': 'Mozila/5.0'})
+essay_urls = []
 
-webpage = urlopen(req)
+for gangwon_url in GANGWON_URL_LIST:
 
-soup = BeautifulSoup(webpage, 'html.parser')
+    # gangwon_url 은 각 페이지별 url
 
-for td_tag in soup.find_all('td', 'bbs-list-title bbs-skin-width-large'):
+    # page 하나 가져오기
+    req = Request(gangwon_url, headers={'User-Agent': 'Mozila/5.0'})
+    webpage = urlopen(req)
+    soup = BeautifulSoup(webpage, 'html.parser')
 
-    print(td_tag)
+    # page에서 각 작품별 링크 가져오기
+    for td_tag in soup.find_all('td', 'bbs-list-title bbs-skin-width-large'):
 
-    # if tag.has_attr("href"):
-    #     print(tag['href'])
+        # 장르가 [수필] 이나 [산문] 일때만 url 저장
+        if td_tag.find('small').text == '[수필]' or td_tag.find('small').text == '[산문]':
+            essay_url = "http://www.kidkangwon.co.kr/bbs/" + td_tag.find('a')['href']
+            essay_urls.append(essay_url)
 
+print(essay_urls)
+
+# 각 url 별로 제목과 본문 추출하기
+for essay_url in essay_urls:
+    req = Request(essay_url, headers={'User-Agent': 'Mozila/5.0'})
+    webpage = urlopen(req)
+    soup = BeautifulSoup(webpage, 'html.parser')
+
+    
 
