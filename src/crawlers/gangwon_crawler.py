@@ -9,6 +9,8 @@ from bs4 import BeautifulSoup
 import os
 from urllib.request import urlopen
 from urllib.request import Request
+from tqdm import tqdm
+
 
 # 폴더 생성
 save_folder_path = "/workspace/home/uglee/Projects/title_extraction/datasets/raw_datasets/gangwon_folder"
@@ -40,7 +42,7 @@ GANGWON_URL_LIST = [
 
 essay_urls = []
 
-for gangwon_url in GANGWON_URL_LIST:
+for gangwon_url in tqdm(GANGWON_URL_LIST):
 
     # gangwon_url 은 각 페이지별 url
 
@@ -59,11 +61,36 @@ for gangwon_url in GANGWON_URL_LIST:
 
 print(essay_urls)
 
+title_list = []
+content_list = []
+
 # 각 url 별로 제목과 본문 추출하기
-for essay_url in essay_urls:
+for essay_url in tqdm(essay_urls):
     req = Request(essay_url, headers={'User-Agent': 'Mozila/5.0'})
     webpage = urlopen(req)
     soup = BeautifulSoup(webpage, 'html.parser')
 
-    
+    title = soup.find('div', 'header-title').text
+    content = soup.find('article', 'content').text
+
+    title_list.append(title)
+    content_list.append(content)
+
+
+# save_folder_path = "/workspace/home/uglee/Projects/title_extraction/datasets/raw_datasets/gangwon_folder"
+
+import pandas as pd
+
+df = pd.DataFrame({
+    'title': title,
+    'content': content
+})
+
+df.to_csv(
+    os.join(save_folder_path, 'gangwon_dataset.csv'),
+    sep='\t',
+    encoding='utf-8'
+)
+
+
 
