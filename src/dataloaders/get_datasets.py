@@ -5,32 +5,44 @@ from torch.utils.data import Dataset
 from .data_utils import TextGenerationDataset
 from torch.utils.data import DataLoader
 
-def read_text(fn):
-    with open(fn, 'r') as f:
-        lines = f.readlines()
+import os
 
-        labels, texts = [], []
+def read_text(folder_path):
 
-        '''
-        tok = text + [SEP] + label
-        '''
-        sep_token = '[SEP]'
-        toks = []
+    # 각 파일을 불러오기
+    file_list = os.listdir(folder_path)
 
-        for line in lines:
+    sep_token = '[SEP]'
+    labels, texts = [], []
+    toks = []
+    '''
+    tok = text + [SEP] + label
+    '''
 
-            if line.strip() != '':
+    for file_name in file_list:
 
-                label, text = line.strip().split('\t')
-                labels += [label]
-                texts += [text]
+        fn = os.path.join(folder_path, file_name)
 
-                tok = [text + sep_token + label]
+        with open(fn, 'r') as f:
 
-                toks += tok
+            lines = f.readlines()
+
+            for line in lines:
+
+                if line.strip() != '':
+
+                    label = line.split('\t')[0]
+                    text = line.split('\t')[1]
+
+                    #label, text = line.strip().split('\t')
+                    labels += [label]
+                    texts += [text]
+
+                    tok = [text + sep_token + label]
+
+                    toks += tok
 
     return labels, texts, toks
-
 
 def get_datasets(fn, valid_ratio=.2, test_ratio=.2):
 
