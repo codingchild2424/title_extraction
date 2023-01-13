@@ -35,7 +35,7 @@ class KoBARTTrainer():
         for idx, data in enumerate(tqdm(train_loader)):
             self.model.train()
 
-            print("data", data)
+            #print("data", data)
 
             '''
             data = {

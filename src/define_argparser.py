@@ -7,7 +7,7 @@ def define_argparser():
 
     p.add_argument('--model_fn', required=True)
     p.add_argument('--train_fn', type=str, default='../datasets/pre_datasets')
-    p.add_argument('--gpu_id', type=int, default=0 if torch.cuda.is_available() else -1)
+    p.add_argument('--gpu_id', type=int, default=3 if torch.cuda.is_available() else -1)
     # Recommended model list:
     # - kykim/bert-kor-base
     # - kykim/albert-kor-base
