@@ -46,16 +46,19 @@ def read_text(folder_path):
 
 def get_datasets(fn, valid_ratio=.2, test_ratio=.2):
 
-    _, _, toks = read_text(fn)
+    labels, texts, toks = read_text(fn)
 
-    shuffled = list(toks)
+    shuffled = list(zip(texts, labels))
     random.shuffle(shuffled)
+
+    texts = [e[0] for e in shuffled]
+    labels = [e[1] for e in shuffled]
 
     idx1 = int(len(shuffled) * (1 - (valid_ratio + test_ratio))) # 0.6
     idx2 = int(len(shuffled) * (1 - (test_ratio))) # 0.8
 
-    train_dataset = TextGenerationDataset(shuffled[:idx1])
-    valid_dataset = TextGenerationDataset(shuffled[idx1:idx2])
-    test_dataset = TextGenerationDataset(shuffled[idx2:])
+    train_dataset = TextGenerationDataset(texts[:idx1], labels[:idx1])
+    valid_dataset = TextGenerationDataset(texts[idx1:idx2], labels[idx1:idx2])
+    test_dataset = TextGenerationDataset(texts[idx2:], labels[idx2:])
 
     return train_dataset, valid_dataset, test_dataset

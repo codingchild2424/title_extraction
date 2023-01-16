@@ -13,7 +13,7 @@ def define_argparser():
     # - kykim/albert-kor-base
     # - beomi/kcbert-base
     # - beomi/kcbert-large
-    p.add_argument('--pretrained_model_name', type=str, default='skt/kogpt2-base-v2')
+    p.add_argument('--pretrained_model_name', type=str, default='gogamza/kobart-base-v1')
     p.add_argument('--use_albert', action='store_true')
     p.add_argument('--use_roberta', action='store_true')
 
