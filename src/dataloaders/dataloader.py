@@ -81,21 +81,24 @@ class TextAbstractSummarizationCollator():
 
     def __init__(
         self,
-        bos_token_id: int,
-        eos_token_id: int,
-        pad_token_id: int,
-        inp_max_len: int = 1024,
-        tar_max_len: int = 256,
+        # bos_token_id: int,
+        # eos_token_id: int,
+        # pad_token_id: int,
+        # inp_max_len: int = 1024,
+        # tar_max_len: int = 256,
+        # 
+        tokenizer,
+        config,
         ignore_index: int = -100,
         mode: str = "train",
     ):
         super(TextAbstractSummarizationCollator, self).__init__()
 
-        self.bos_token_id = bos_token_id
-        self.eos_token_id = eos_token_id
-        self.pad_token_id = pad_token_id
-        self.inp_max_len = inp_max_len
-        self.tar_max_len = tar_max_len
+        self.bos_token_id = tokenizer.bos_token_id
+        self.eos_token_id = tokenizer.eos_token_id
+        self.pad_token_id = tokenizer.pad_token_id
+        self.inp_max_len = config.inp_max_len
+        self.tar_max_len = config.tar_max_len
         self.ignore_index = ignore_index
 
         ## Mode.
