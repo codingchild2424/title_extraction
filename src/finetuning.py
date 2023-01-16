@@ -24,65 +24,39 @@ from tqdm import tqdm
 from typing import List, Dict
 import os
 
-from dataloaders.dataloader import get_datasets
-from dataloaders.data_utils import TextAbstractSummarizationCollator
+from define_argparser import define_argparser
 
-config = easydict.EasyDict({
-    "raw_train_path": "./data/Training",
-    "raw_valid_path": "./data/Validation",
-    "clean": False,
-    "data": "data", ## data path
-    "seed": 42,
-    "sample_submission_path": "sample_submission.tsv",
-    "answer_path": "answer.tsv",
-    "prediction_path": "prediction.tsv",
-    "pretrained_model_name": "gogamza/kobart-base-v1",
-    "train": "data/train.tsv",
-    "valid": "data/valid.tsv",
-    "test": "data/test.tsv",
-    ## Training arguments.
-    "ckpt": "ckpt", ## path
-    "logs": "logs", ## path
-    "per_replica_batch_size": 8,
-    "gradient_accumulation_steps": 16,
-    "lr": 5e-5,
-    "weight_decay": 1e-2,
-    "warmup_ratio": 0.2,
-    "n_epochs": 10,
-    "inp_max_len": 1024,
-    "tar_max_len": 256,
-    "model_fpath": "/workspace/home/uglee/Projects/title_extraction/src/model_records/kobart-model.pth",
-    ## Inference.
-    "gpu_id": 3,
-    "beam_size": 5,
-    "length_penalty": 0.8,
-    "no_repeat_ngram_size": 3,
-    "var_len": False,
-})
+from dataloaders.dataloader import get_datasets
+from dataloaders.dataloader import TextAbstractSummarizationCollator
+
+'''
+Thanks to 이야기연구소 주식회사 팀
+https://dacon.io/competitions/official/235829/codeshare/4047
+'''
 
 def main(config):
     # device는 cpu, cuda 선택하도록
     device = torch.device('cpu') if config.gpu_id < 0 else torch.device('cuda:%d' % config.gpu_id)
 
     tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(
-        'gogamza/kobart-base-v1'
+        config.pretrained_model_name
     )
 
     tr_ds = get_datasets(
         tokenizer=tokenizer,
-        fpath=Path("/workspace/home/uglee/Projects/title_extraction/datasets/integrated_pre_datasets/train_data.tsv")
+        fpath=Path(config.train_data_path)
     )
 
     vl_ds = get_datasets(
         tokenizer=tokenizer,
-        fpath=Path("/workspace/home/uglee/Projects/title_extraction/datasets/integrated_pre_datasets/valid_data.tsv")
+        fpath=Path(config.valid_data_path)
     )
 
     len(tr_ds)
     len(vl_ds)
 
     model = transformers.BartForConditionalGeneration.from_pretrained(
-        'gogamza/kobart-base-v1'
+        config.pretrained_model_name
         )
 
     ## Path arguments.
@@ -93,8 +67,8 @@ def main(config):
     training_args = transformers.Seq2SeqTrainingArguments(
         output_dir=output_dir,
         evaluation_strategy="epoch",
-        per_device_train_batch_size=config.per_replica_batch_size,
-        per_device_eval_batch_size=config.per_replica_batch_size,
+        per_device_train_batch_size=config.batch_size_per_device,
+        per_device_eval_batch_size=config.batch_size_per_device,
         gradient_accumulation_steps=config.gradient_accumulation_steps,
         learning_rate=config.lr,
         weight_decay=config.weight_decay,
@@ -147,6 +121,6 @@ def main(config):
 
 if __name__ == "__main__":
 
-    #config = define_argparser()
+    config = define_argparser()
 
     main(config)
