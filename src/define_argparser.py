@@ -18,7 +18,7 @@ def define_argparser():
     p.add_argument('--ckpt', type=str, default="ckpt")
     p.add_argument('--logs' ,type=str, default="logs")
 
-    p.add_argument('--batch_size_per_device', type=int, default=8)
+    p.add_argument('--batch_size_per_device', type=int, default=8) # 8이 최선
     p.add_argument('--gradient_accumulation_steps', type=int, default=16)
     p.add_argument('--lr', type=float, default=5e-5)
 
