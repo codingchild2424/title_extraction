@@ -46,6 +46,6 @@ demo = gr.Interface(
     fn=inference, 
     inputs="text", 
     outputs="text" #return 값
-    )
+    ).launch(share=True) # launch(share=True)를 설정하면 외부에서 접속 가능한 링크가 생성됨
 
 demo.launch()

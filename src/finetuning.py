@@ -57,15 +57,11 @@ def main(config):
             config=config
         ),
         train_dataset=tr_ds,
-        valid_dataset=vl_ds
+        valid_dataset=vl_ds,
+        config=config,
+        tokenizer=tokenizer
     )
 
-    # Save the best model
-    torch.save({
-        "model": trainer.model.state_dict(),
-        "config": config,
-        "tokenizer": tokenizer
-    }, Path(config.model_fpath))
 
 if __name__ == "__main__":
 

@@ -2,6 +2,7 @@
 import transformers
 import datetime
 from pathlib import Path
+import torch
 
 class Trainer():
 
@@ -47,7 +48,9 @@ class Trainer():
         model,
         data_collator,
         train_dataset,
-        valid_dataset
+        valid_dataset,
+        config,
+        tokenizer
     ):
 
         training_args = self._training_args(self.config)
@@ -66,6 +69,13 @@ class Trainer():
         trainer.train()
 
         print("KoBART Fine Tuning Done!!!")
+
+        # Save the best model
+        torch.save({
+            "model": trainer.model.state_dict(),
+            "config": config,
+            "tokenizer": tokenizer
+        }, Path(config.model_fpath))
 
         
 
