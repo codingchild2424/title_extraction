@@ -3,7 +3,7 @@ import gradio as gr
 import torch
 import transformers
 
-from define_argparser import define_argparser
+from bart_define_argparser import define_argparser
 
 # saved_model
 def load_model(model_path, config):

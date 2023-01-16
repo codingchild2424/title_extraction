@@ -11,12 +11,12 @@ from tqdm import tqdm
 from typing import List, Dict
 import os
 
-from define_argparser import define_argparser
+from gpt2_define_argparser import define_argparser
 
-from dataloaders.dataloader import get_datasets
-from dataloaders.dataloader import TextAbstractSummarizationCollator
+from dataloaders.gpt2_dataloader import get_datasets
+from dataloaders.gpt2_dataloader import TextAbstractSummarizationCollator
 
-from trainer import Trainer
+from bart_trainer import Trainer
 
 '''
 Thanks to 이야기연구소 주식회사 팀
@@ -28,7 +28,7 @@ def main(config):
     device = torch.device('cpu') if config.gpu_id < 0 else torch.device('cuda:%d' % config.gpu_id)
 
     tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(
-        config.pretrained_model_name
+        config.pretrained_model_name # kogpt2
     )
 
     tr_ds = get_datasets(
@@ -44,8 +44,8 @@ def main(config):
     print("train_data: %s" % str(len(tr_ds)))
     print("valid_data: %s" % str(len(vl_ds)))
 
-    model = transformers.BartForConditionalGeneration.from_pretrained(
-        config.pretrained_model_name
+    model = transformers.GPT2LMHeadModel.from_pretrained(
+        config.pretrained_model_name # kogpt2
         )
 
     trainer = Trainer(config)
