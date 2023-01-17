@@ -17,7 +17,8 @@ def load_model(model_path, config):
     tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(config.pretrained_model_name)
 
     ## Load weights.
-    model = transformers.BartForConditionalGeneration.from_pretrained(config.pretrained_model_name)
+    model = transformers.GPT2LMHeadModel.from_pretrained(config.pretrained_model_name)
+    model.resize_token_embeddings( len(tokenizer) )
     model.load_state_dict(gpt2_best)
 
     return model, tokenizer
@@ -33,11 +34,19 @@ def inference(prompt):
         model_path=model_path, 
         config=config
         )
-
-    input_ids = tokenizer.encode(prompt+"1줄요약")
-    input_ids = torch.tensor(input_ids)
-    input_ids = input_ids.unsqueeze(0)
-    output = model.generate(input_ids)
+    #+"1줄요약"
+    input_ids = tokenizer.encode(prompt, return_tensors='pt')
+    #input_ids = torch.tensor(input_ids)
+    #input_ids = input_ids.unsqueeze(0)
+    output = model.generate(
+        input_ids,
+        max_length=20,
+        repetition_penalty=2.0,
+        pad_token_id=tokenizer.pad_token_id,
+        eos_token_id=tokenizer.eos_token_id,
+        bos_token_id=tokenizer.bos_token_id,
+        use_cache=True
+        )
     output = tokenizer.decode(output[0], skip_special_tokens=True)    
 
     return output
