@@ -3,7 +3,7 @@ import gradio as gr
 import torch
 import transformers
 
-from bart_define_argparser import define_argparser
+from gpt2_define_argparser import define_argparser
 
 # saved_model
 def load_model(model_path, config):
@@ -12,13 +12,13 @@ def load_model(model_path, config):
         map_location="cpu" if config.gpu_id < 0 else "cuda:%d" % config.gpu_id
     )
 
-    bart_best = saved_data["model"]
+    gpt2_best = saved_data["model"]
     train_config = saved_data["config"]
     tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(config.pretrained_model_name)
 
     ## Load weights.
     model = transformers.BartForConditionalGeneration.from_pretrained(config.pretrained_model_name)
-    model.load_state_dict(bart_best)
+    model.load_state_dict(gpt2_best)
 
     return model, tokenizer
 
@@ -34,7 +34,7 @@ def inference(prompt):
         config=config
         )
 
-    input_ids = tokenizer.encode(prompt)
+    input_ids = tokenizer.encode(prompt+"1줄요약")
     input_ids = torch.tensor(input_ids)
     input_ids = input_ids.unsqueeze(0)
     output = model.generate(input_ids)

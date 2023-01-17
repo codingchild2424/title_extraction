@@ -183,19 +183,23 @@ class Trainer():
 
             # Training Session
             train_loss = self._train(train_loader)
-            valid_loss = self._validate(valid_loader)
+            valid_loss = self._valid(valid_loader)
 
-            train_loss_list.append(train_loss)
-            valid_loss_list.append(valid_loss)
+            # 평균값
+            train_loss_avg = sum(train_loss) / len(train_loss)
+            valid_loss_avg = sum(valid_loss) / len(valid_loss)
 
-            if valid_loss <= best_valid_loss:
-                best_valid_loss = valid_loss
+            train_loss_list.append(train_loss_avg)
+            valid_loss_list.append(valid_loss_avg)
+
+            if valid_loss_avg <= best_valid_loss:
+                best_valid_loss = valid_loss_avg
 
             print("Epoch(%d/%d) result: train_score=%.4f  valid_score=%.4f best_valid_score=%.4f" % (
                 epoch_index + 1,
                 self.n_epochs,
-                train_loss,
-                valid_loss,
+                train_loss_avg,
+                valid_loss_avg,
                 best_valid_loss,
             ))
 

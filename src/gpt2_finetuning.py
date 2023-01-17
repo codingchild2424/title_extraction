@@ -72,7 +72,7 @@ def main(config):
 
     #print("model config", model.config)
 
-    print("tr_ds", tr_ds)
+    #print("tr_ds", tr_ds)
 
     # loader
 
@@ -114,6 +114,12 @@ def main(config):
         valid_loader=valid_loader,
         config=config
     )
+
+    torch.save({
+        "model": trainer.model.state_dict(),
+        "config": config,
+        "tokenizer": tokenizer
+    }, Path(config.model_fpath))
 
 
 if __name__ == "__main__":
