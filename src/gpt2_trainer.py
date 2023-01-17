@@ -3,13 +3,26 @@ import transformers
 import datetime
 from pathlib import Path
 import torch
+from tqdm import tqdm
 
 class Trainer():
 
     def __init__(
         self,
+        model,
+        optimizer,
+        n_epochs,
+        device,
+        crit,
+        max_seq_len,
         config
-    ):
+        ):
+        self.model=model
+        self.optimizer=optimizer
+        self.n_epochs=n_epochs
+        self.device=device
+        self.crit=crit
+        self.max_seq_len=max_seq_len
         self.config = config
 
     def _training_args(
@@ -43,7 +56,7 @@ class Trainer():
         return training_args
 
 
-    def _train(
+    def old_train(
         self,
         model,
         data_collator,
@@ -77,5 +90,119 @@ class Trainer():
             "tokenizer": tokenizer
         }, Path(config.model_fpath))
 
+    '''
+    Custom Trainer
+    '''
+
+    def _train(self, train_loader):
+
+        loss_list = []
+
+        for idx, data in enumerate(tqdm(train_loader)):
+            self.model.train()
+
+            input_ids = data['input_ids']
+            attention_mask = data['attention_mask']
+            labels = data['labels']
+
+            input_ids = input_ids.to(self.device)
+            attention_mask = attention_mask.to(self.device)
+            labels = labels.to(self.device)
+
+            # |input_ids| = (bs, sq)
+            # |labels| = (bs, sq)
+
+            # print("input_ids", input_ids.size())
+            # print("labels", labels.size())
+
+            outputs = self.model(
+                input_ids,
+                labels=labels
+            )#.to(self.device)
+
+            loss, logits = outputs[:2]
+
+            loss.backward()
+            if (idx + 1) % self.config.gradient_accumulation_steps == 0:
+                self.optimizer.step()
+                self.optimizer.zero_grad()
+
+            loss_list.append(loss)
+
+        return loss_list
         
+
+    def _valid(self, valid_loader):
+
+        loss_list = []
+
+        with torch.no_grad():
+            for idx, data in enumerate(tqdm(valid_loader)):
+                self.model.eval()
+
+                input_ids = data['input_ids']
+                attention_mask = data['attention_mask']
+                labels = data['labels']
+
+                input_ids = input_ids.to(self.device)
+                attention_mask = attention_mask.to(self.device)
+                labels = labels.to(self.device)
+
+                # |input_ids| = (bs, sq)
+                # |labels| = (bs, sq)
+
+                # print("input_ids", input_ids.size())
+                # print("labels", labels.size())
+
+                outputs = self.model(
+                    input_ids,
+                    labels=labels,
+                    attention_mask=attention_mask
+                )#.to(self.device)
+
+                loss, logits = outputs[:2]
+
+                loss_list.append(loss)
+
+        return loss_list
+
+
+
+    def train(self, train_loader, valid_loader, config):
+
+        train_loss_list = []
+        valid_loss_list = []
+        best_valid_loss = float('inf')
+
+        for epoch_index in range(self.n_epochs):
+
+            print("Epoch(%d/%d) start" % (
+                epoch_index + 1,
+                self.n_epochs
+            ))
+
+            # Training Session
+            train_loss = self._train(train_loader)
+            valid_loss = self._validate(valid_loader)
+
+            train_loss_list.append(train_loss)
+            valid_loss_list.append(valid_loss)
+
+            if valid_loss <= best_valid_loss:
+                best_valid_loss = valid_loss
+
+            print("Epoch(%d/%d) result: train_score=%.4f  valid_score=%.4f best_valid_score=%.4f" % (
+                epoch_index + 1,
+                self.n_epochs,
+                train_loss,
+                valid_loss,
+                best_valid_loss,
+            ))
+
+        print("\n")
+        print("The Best Valid Score in Testing Session is %.4f" % (
+                best_valid_loss,
+            ))
+        print("\n")
+
 

@@ -147,7 +147,7 @@ class TextAbstractSummarizationCollator():
 
         ## Inputs for encoder.
         # [BOS] + TEXT
-        #input_ids = [ + i for i in tokenized_texts]
+        #input_ids = [ + i for i in tokenized_texts] [:self.inp_max_len - 1]
         input_ids = [[self.bos_token_id] + i for i in tokenized_texts]
         input_ids = self._pad(input_ids, token_id=self.pad_token_id)#.astype(np.int64)  ## numpy format
         attention_mask = (input_ids != self.pad_token_id).astype(float) ## numpy format
@@ -156,9 +156,6 @@ class TextAbstractSummarizationCollator():
         # TEXT + [EOS]
         labels = [i + [self.eos_token_id] for i in tokenized_texts]
         labels = self._pad(labels, token_id=self.ignore_index)#.astype(np.int64) ## why != "padding_id" ???
-
-        print("input_ids", input_ids)
-        print("labels", labels)
         
         ## Pack as pre-defined arguments. See:
         ##   https://huggingface.co/docs/transformers/model_doc/bart#transformers.BartForConditionalGeneration
