@@ -32,6 +32,9 @@ def define_argparser():
 
     p.add_argument('--beam_size', type=int, default=5)
 
+    # 추가
+    p.add_argument('--prompt4summary', type=str, default="1줄요약")
+
     config = p.parse_args()
 
     return config

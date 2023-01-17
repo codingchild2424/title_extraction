@@ -28,16 +28,21 @@ def main(config):
     device = torch.device('cpu') if config.gpu_id < 0 else torch.device('cuda:%d' % config.gpu_id)
 
     tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(
-        config.pretrained_model_name # kogpt2
+        config.pretrained_model_name, # kogpt2
+        # kogpt는 사전에 토큰을 지정해주지 않으면, None 값으로 반영되어있음
+        bos_token='</s>', eos_token='</s>', unk_token='<unk>',
+        pad_token='<pad>', mask_token='<mask>'
     )
 
     tr_ds = get_datasets(
         tokenizer=tokenizer,
+        config=config,
         fpath=Path(config.train_data_path)
     )
 
     vl_ds = get_datasets(
         tokenizer=tokenizer,
+        config=config,
         fpath=Path(config.valid_data_path)
     )
 

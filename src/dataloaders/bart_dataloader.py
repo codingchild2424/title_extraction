@@ -139,6 +139,9 @@ class TextAbstractSummarizationCollator():
 
         ## We ensure that generator's inputs' and outputs' shapes are equal.
         assert decoder_input_ids.shape == labels.shape
+
+        # print("input_ids", input_ids)
+        # print("labels", labels)
         
         ## Pack as pre-defined arguments. See:
         ##   https://huggingface.co/docs/transformers/model_doc/bart#transformers.BartForConditionalGeneration

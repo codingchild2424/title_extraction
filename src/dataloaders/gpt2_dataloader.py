@@ -27,6 +27,7 @@ class TextAbstractSummarizationDataset(torch.utils.data.Dataset):
     def __init__(
         self,
         tokenizer,
+        config,
         fpath: pathlib.PosixPath,
         mode: str = "train",
     ):
@@ -42,13 +43,34 @@ class TextAbstractSummarizationDataset(torch.utils.data.Dataset):
 
         ## Apply tokenize first to speed up in training phase and make code more simply.
         tqdm.pandas(desc="Tokenizing input texts")
+
+        # 요약을 위한 키워드
+        prompt4summary = config.prompt4summary
+
+        # 여기서 텍스트에 사전에 prompt를 입력하기
+        self.df.loc[:, "text"] = self.df.loc[:, "text"] + prompt4summary
         self.df.loc[:, "text_tok"] = self.df.loc[:, "text"].progress_apply(lambda x: tokenizer.encode(x))
         self.df.loc[:, "text_tok_len"] = self.df.loc[:, "text_tok"].apply(lambda x: len(x))
 
         if self.mode == "train":
             tqdm.pandas(desc="Tokenizing target summaries")
+
+            # 여기서 텍스트에 사전에 prompt를 입력하기
+            self.df.loc[:, "text"] = self.df.loc[:, "text"] + prompt4summary
+            self.df.loc[:, "text_tok"] = self.df.loc[:, "text"].progress_apply(lambda x: tokenizer.encode(x))
+            self.df.loc[:, "text_tok_len"] = self.df.loc[:, "text_tok"].apply(lambda x: len(x))
+
             self.df.loc[:, "summary_tok"] = self.df.loc[:, "summary"].progress_apply(lambda x: tokenizer.encode(x))
             self.df.loc[:, "summary_tok_len"] = self.df.loc[:, "summary_tok"].apply(lambda x: len(x))
+
+            # text와 summary 합쳐서 다시 text_tok으로 반환
+            self.df.loc[:, "text_tok"] = self.df.loc[:, "text_tok"] + self.df.loc[:, "summary_tok"]
+        else:
+            # 여기서 텍스트에 사전에 prompt를 입력하기
+            self.df.loc[:, "text"] = self.df.loc[:, "text"] + prompt4summary
+            self.df.loc[:, "text_tok"] = self.df.loc[:, "text"].progress_apply(lambda x: tokenizer.encode(x))
+            # 합치지 않고 반환
+            self.df.loc[:, "text_tok_len"] = self.df.loc[:, "text_tok"].apply(lambda x: len(x))
 
         ## Sort by tokenized length with tqdm progress bar.
         ## 
@@ -72,9 +94,7 @@ class TextAbstractSummarizationDataset(torch.utils.data.Dataset):
             "text": instance["text_tok"],
             "length": len(instance["text_tok"]),
         }
-        if self.mode == "train":
-            return_value["summary"] = instance["summary_tok"]
-        
+
         return return_value
 
 class TextAbstractSummarizationCollator():
@@ -118,35 +138,33 @@ class TextAbstractSummarizationCollator():
     def _train_collator(self, samples: List[Dict[str, List[int]]]) -> Dict[str, List[int]]:
         ## Unpack.
 
+        # For Autoregressive
+
         ## If input max length > 1024, you can see below error:
         ##   1) Assertion `srcIndex < srcSelectDimSize` failed
         ##   2) Device-side assert triggered
-        tokenized_texts     = [s["text"][:self.inp_max_len]        for s in samples]
-        tokenized_summaries = [s["summary"][:self.tar_max_len - 1] for s in samples] ## <bos> or <eos> token index
+        tokenized_texts     = [s["text"][:self.inp_max_len] for s in samples]
 
         ## Inputs for encoder.
-        input_ids = self._pad(tokenized_texts, token_id=self.pad_token_id)  ## numpy format
-        attention_mask = (input_ids != self.pad_token_id).astype(float)     ## numpy format
-
-        ## Inputs for decoder (generator).
-        decoder_input_ids = [[self.bos_token_id] + i for i in tokenized_summaries]      ## bos
-        decoder_input_ids = self._pad(decoder_input_ids, token_id=self.pad_token_id)    ## eos
-        decoder_attention_mask = (decoder_input_ids != self.pad_token_id).astype(float)
+        # [BOS] + TEXT
+        #input_ids = [ + i for i in tokenized_texts]
+        input_ids = [[self.bos_token_id] + i for i in tokenized_texts]
+        input_ids = self._pad(input_ids, token_id=self.pad_token_id)#.astype(np.int64)  ## numpy format
+        attention_mask = (input_ids != self.pad_token_id).astype(float) ## numpy format
 
         ## Answer.
-        labels = [i + [self.eos_token_id] for i in tokenized_summaries]
-        labels = self._pad(labels, token_id=self.ignore_index) ## why != "padding_id" ???
+        # TEXT + [EOS]
+        labels = [i + [self.eos_token_id] for i in tokenized_texts]
+        labels = self._pad(labels, token_id=self.ignore_index)#.astype(np.int64) ## why != "padding_id" ???
 
-        ## We ensure that generator's inputs' and outputs' shapes are equal.
-        assert decoder_input_ids.shape == labels.shape
+        print("input_ids", input_ids)
+        print("labels", labels)
         
         ## Pack as pre-defined arguments. See:
         ##   https://huggingface.co/docs/transformers/model_doc/bart#transformers.BartForConditionalGeneration
         return {
             "input_ids":                torch.from_numpy(input_ids),
             "attention_mask":           torch.from_numpy(attention_mask),
-            "decoder_input_ids":        torch.from_numpy(decoder_input_ids),
-            "decoder_attention_mask":   torch.from_numpy(decoder_attention_mask),
             "labels":                   torch.from_numpy(labels),
         }
 
@@ -156,7 +174,8 @@ class TextAbstractSummarizationCollator():
         tokenized_texts  = [s["text"][:self.inp_max_len] for s in samples]   ## no <bos> token included
 
         ## Inputs for encoder.
-        input_ids = self._pad(tokenized_texts, token_id=self.pad_token_id)  ## numpy format
+        #input_ids = [[self.bos_token_id] + i for i in tokenized_texts]
+        input_ids = self._pad([self.bos_token_id] + tokenized_texts, token_id=self.pad_token_id)  ## numpy format
         attention_mask = (input_ids != self.pad_token_id).astype(float)     ## numpy format
 
         ## Pack as pre-defined arguments:
@@ -164,7 +183,6 @@ class TextAbstractSummarizationCollator():
         return {
             "input_ids":        torch.from_numpy(input_ids),
             "attention_mask":   torch.from_numpy(attention_mask),
-            ## Additional information to make answer.
             "id":               ids,
         }
 
@@ -173,5 +191,5 @@ class TextAbstractSummarizationCollator():
         return self._train_collator(samples) if self.mode == "train" else self._test_collator(samples)
 
 
-def get_datasets(tokenizer, fpath: pathlib.PosixPath, mode: str = "train"):
-    return TextAbstractSummarizationDataset(tokenizer, fpath, mode=mode)
+def get_datasets(tokenizer, config, fpath: pathlib.PosixPath, mode: str = "train"):
+    return TextAbstractSummarizationDataset(tokenizer, config, fpath, mode=mode)

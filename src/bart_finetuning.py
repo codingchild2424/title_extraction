@@ -16,7 +16,7 @@ from bart_define_argparser import define_argparser
 from dataloaders.bart_dataloader import get_datasets
 from dataloaders.bart_dataloader import TextAbstractSummarizationCollator
 
-from trainer import Trainer
+from bart_trainer import Trainer
 
 '''
 Thanks to 이야기연구소 주식회사 팀
