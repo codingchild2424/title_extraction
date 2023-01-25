@@ -9,9 +9,9 @@ def define_argparser():
     p.add_argument('--gpu_id', type=int, default=3 if torch.cuda.is_available() else -1)
 
     # data_path
-    p.add_argument('--train_data_path', type=str, default='../datasets/integrated_pre_datasets/train_data.tsv')
-    p.add_argument('--valid_data_path', type=str, default='../datasets/integrated_pre_datasets/valid_data.tsv')
-    p.add_argument('--test_data_path', type=str, default='../datasets/integrated_pre_datasets/test_data.tsv')
+    p.add_argument('--train_data_path', type=str, default='../datasets/integrated_pre_logical_datasets/train_data.tsv')
+    p.add_argument('--valid_data_path', type=str, default='../datasets/integrated_pre_logical_datasets/valid_data.tsv')
+    p.add_argument('--test_data_path', type=str, default='../datasets/integrated_pre_logical_datasets/test_data.tsv')
     
     p.add_argument('--pretrained_model_name', type=str, default='gogamza/kobart-base-v1')
 
@@ -28,7 +28,7 @@ def define_argparser():
 
     p.add_argument('--inp_max_len', type=int, default=1024)
     p.add_argument('--tar_max_len', type=int, default=256)
-    p.add_argument('--model_fpath', type=str, default="model_records/kobart-model.pth")
+    p.add_argument('--model_fpath', type=str, default="model_records/kobart-model-logical.pth")
 
     p.add_argument('--beam_size', type=int, default=5)
 
